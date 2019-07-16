@@ -1,6 +1,8 @@
 import dateutil
 import pandas as pd
 import numpy as np
+# make a station object 
+
 integer = ['TMP', 'DPT', 'WDR', 'WSP', 'CIG', 'VIS', 'N/X', 'P06', 'P12']
 categorical = ['CLD','OBV', 'TYP', 'Q06', 'Q12', 'T06', 'T12']
 incremental = ['N/X', 'P06', 'P12', 'Q06', 'Q12', 'T06', 'T12']
@@ -9,7 +11,6 @@ def get_header(header_row):
     header = {}
     header['station'], c1, c2, c3, date, time, tz =  header_row.split()
     header['model'] = f'{c1} {c2} {c3}' 
-    header['runtime'] = f'{date} {time} {tz}'
     header['runtime'] = dateutil.parser.parse(f'{date} {time} {tz}')
     return header
 
@@ -24,7 +25,6 @@ def get_fntime(date_row, hour_row, header):
     
     finish_times = []
     dt = -1
-    
     for hour in hours:
         if hour == '00':
             dt+=1
@@ -47,9 +47,7 @@ def parse_incremental(row):
             vals.append(None)
     return var, vals
 
-def parse_station(station):
-    header = get_header(station[0])
-    header['ftime']= get_fntime(station[1], station[2], header)
+def get_rows(header, station):
     df = pd.DataFrame(header)
     for row in station[3:]:
         #cranky parsing issues
@@ -57,7 +55,6 @@ def parse_station(station):
             var, vals = parse_incremental(row)
         else:
             var, *vals = row.split()
-
         # data type
         if var in categorical:
             df[var] = np.array(vals, dtype='object')
@@ -65,4 +62,10 @@ def parse_station(station):
             df[var] = np.array(vals, dtype='float64')
         else:
             raise KeyError(f"{var} parsing not supported")
+    return df
+
+def parse_station(station):
+    header = get_header(station[0])
+    header['ftime']= get_fntime(station[1], station[2], header)
+    df = get_rows(header, station)
     return df
