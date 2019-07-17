@@ -3,9 +3,10 @@ import pandas as pd
 import numpy as np
 # make a station object 
 
-integer = ['TMP', 'DPT', 'WDR', 'WSP', 'CIG', 'VIS', 'N/X', 'P06', 'P12']
+integer = ['TMP', 'DPT', 'WDR', 'WSP', 'CIG', 'VIS', 'N/X', 'P06', 'P12', 'POS', 'POZ','SNW']
 categorical = ['CLD','OBV', 'TYP', 'Q06', 'Q12', 'T06', 'T12']
-incremental = ['N/X', 'P06', 'P12', 'Q06', 'Q12', 'T06', 'T12']
+incremental = ['N/X', 'P06', 'P12', 'Q06', 'Q12','T06', 'T12','SNW']
+incremental2 = ['T06' , 'T12']
 
 def get_header(header_row):
     header = {}
@@ -42,7 +43,21 @@ def parse_incremental(row):
     for i in range(6, len(row),3):
         val = row[i:i+3].strip()
         if val is not '':
-            vals.append(int(row[i:i+3].strip()))
+            vals.append(row[i:i+3].strip())
+        else:
+            vals.append(None)
+    return var, vals
+
+def parse_incremental2(row):
+    var = row[:6].strip()
+    row = row.rstrip('\n')
+    vals = []
+    vals.append(None)
+    for i in range(9, len(row),6):
+        vals.append(None)
+        val = row[i:i+6].strip()
+        if val is not '':
+            vals.append(row[i:i+6].strip())
         else:
             vals.append(None)
     return var, vals
@@ -52,7 +67,10 @@ def get_rows(header, station):
     for row in station[3:]:
         #cranky parsing issues
         if row.startswith(tuple(incremental), 1):
-            var, vals = parse_incremental(row)
+            if row.startswith(tuple(incremental2),1):
+                var, vals = parse_incremental2(row)
+            else:
+                var, vals = parse_incremental(row)
         else:
             var, *vals = row.split()
         # data type
