@@ -128,9 +128,9 @@ def write_station(station, saveout="modelruns"):
     header = get_header(station[0])
     runtime = str(header['runtime'])
     filename = f"{header['short_model']}_{header['station']}_{header['runtime'].strftime('%Y_%m_%d_%H')}.csv"
-    filepath = Path(saveout/filename)
+    filepath = Path(saveout,filename)
     
-    if q.exists():
+    if not filepath.exists():
         header['ftime']= get_fntime(station[1], station[2], header)
         df = get_rows(header, station)
         df.to_csv(filepath, index=False)
