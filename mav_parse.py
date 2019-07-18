@@ -56,14 +56,14 @@ def get_fntime(date_row, hour_row, header):
 
 
 def parse_row(row):
-"""Takes a row of MOS data and returns the variable and a list of values.
+    """Takes a row of MOS data and returns the variable and a list of values.
  
 Parameters:
 row: string
 Returns:
 var: string
 vals: list
-"""
+    """
     var = row[:5].strip()
     row = row.rstrip('\n')
     vals = []
@@ -79,7 +79,7 @@ vals: list
     return var, vals
 
 def get_rows(header, station):
-""" Produces a numpy array of station data based on a previously produced header and a list of MOS station data.
+    """ Produces a numpy array of station data based on a previously produced header and a list of MOS station data.
 
 Parameters:
 header: dictionary
@@ -87,7 +87,7 @@ station: list of strings
 
 Returns:
 df: numpy array
-"""
+    """
     df = pd.DataFrame(header)
     for row in station[3:]:
         #cranky parsing issues
