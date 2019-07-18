@@ -1,6 +1,7 @@
 import dateutil
 import pandas as pd
 import numpy as np
+from pathlib import Path
 # make a station object 
 
 integer = ['TMP', 'DPT', 'WDR', 'WSP', 'CIG', 'VIS', 'N/X', 'P06', 'P12', 'POS', 'POZ','SNW']
@@ -19,6 +20,7 @@ header: dictionary
     """
     header = {}
     header['station'], c1, c2, c3, date, time, tz =  header_row.split()
+    header['short_model'] = c1
     header['model'] = f'{c1} {c2} {c3}' 
     header['runtime'] = dateutil.parser.parse(f'{date} {time} {tz}')
     return header
@@ -119,3 +121,19 @@ df: numpy array
     header['ftime']= get_fntime(station[1], station[2], header)
     df = get_rows(header, station)
     return df
+
+def write_station(station, saveout="modelruns"):
+    if not station:
+        return
+    header = get_header(station[0])
+    runtime = str(header['runtime'])
+    filename = f"{header['short_model']}_{header['station']}_{header['runtime'].strftime('%Y_%m_%d_%H')}.csv"
+    filepath = Path(saveout/filename)
+    
+    if q.exists():
+        header['ftime']= get_fntime(station[1], station[2], header)
+        df = get_rows(header, station)
+        df.to_csv(filepath, index=False)
+    else:
+        print(f"{filename} exists")
+    return
