@@ -144,7 +144,7 @@ def get_stations(path):
     #find new lines in the file
     station = []
     stations = []
-    with gzip.open(path, 'r') as f:
+    with open(path, 'rb') as f:
         for i, line in enumerate(f):
             if empty.match(line):
                 stations.append(station)
