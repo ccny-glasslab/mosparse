@@ -1,4 +1,6 @@
+import re
 import dateutil
+import gzip
 import pandas as pd
 import numpy as np
 from pathlib import Path
@@ -122,7 +124,7 @@ df: numpy array
     df = get_rows(header, station)
     return df
 
-def write_station(station, saveout="modelruns"):
+def write_station(station, saveout="model_runs"):
     if not station:
         return
     header = get_header(station[0])
@@ -137,3 +139,20 @@ def write_station(station, saveout="modelruns"):
     else:
         print(f"{filename} exists")
     return
+
+def get_stations(path):
+    #find new lines in the file
+    empty= re.compile(b'\s+\n')
+    newline = re.compile(b'1\n')
+    station = []
+    stations = []
+    with gzip.open(path, 'r') as f:
+        for i, line in enumerate(f):
+            if empty.match(line):
+                stations.append(station)
+                station = []
+            elif newline.match(line):
+                pass
+            else:
+                station.append(line.decode())
+    return stations
