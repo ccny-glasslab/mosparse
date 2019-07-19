@@ -1,8 +1,13 @@
+import re
 import dateutil
+import gzip
 import pandas as pd
 import numpy as np
 from pathlib import Path
 # make a station object 
+
+empty= re.compile(b'\s+\n')
+newline = re.compile(b'1\n')
 
 integer = ['TMP', 'DPT', 'WDR', 'WSP', 'CIG', 'VIS', 'N/X', 'P06', 'P12', 'POS', 'POZ','SNW']
 categorical = ['CLD','OBV', 'TYP', 'Q06', 'Q12', 'T06', 'T12']
@@ -10,32 +15,32 @@ incremental = ['N/X', 'P06', 'P12', 'Q06', 'Q12','T06', 'T12','SNW']
 incremental2 = ['T06' , 'T12']
 
 def get_header(header_row):
-"""Creates a dictionary containing the station, model, and run time based on the first row of the MOS data.
-The row should only come from MOS data.
-Parameters:
-header_row: string
+    """ Creates a dictionary containing the station, model, and run time based on the first row of the MOS data. The row should only come from MOS data.
 
-Returns:
-header: dictionary
-"""
+    Parameters:
+    header_row: string
+
+    Returns:
+    header: dictionary
+    """
     header = {}
     header['station'], c1, c2, c3, date, time, tz =  header_row.split()
-    header['model'] = f'{c1} {c2} {c3}'
     header['short_model'] = c1
+    header['model'] = f'{c1} {c2} {c3}' 
     header['runtime'] = dateutil.parser.parse(f'{date} {time} {tz}')
     return header
 
 def get_fntime(date_row, hour_row, header):
-""" Creates a list of dateutil dates based on a header and the date and hour rows of the MOS data.
+    """ Creates a list of dateutil dates based on a header and the date and hour rows of the MOS data.
+        
+    Parameters:
+    date_row: string
+    hour_row: string
+    header: dictionary
     
-Parameters:
-date_row: string
-hour_row: string
-header: dictionary
-    
-Returns:
-finish_times: list
-"""
+    Returns:
+    finish_times: list
+    """
     #(DT, Hr tuples), which is the finish time column
     #http://www.meteor.wisc.edu/~hopkins/aos100/mos-doc.htm
     #https://mesonet.agron.iastate.edu/mos/fe.phtml
@@ -57,14 +62,14 @@ finish_times: list
     return finish_times
 
 def parse_row(row):
-"""Takes a row of MOS data and returns the variable and a list of values.
- 
-Parameters:
-row: string
-Returns:
-var: string
-vals: list
-"""
+    """Takes a row of MOS data and returns the variable and a list of values.
+   
+    Parameters:
+    row: string
+    Returns:
+    var: string
+    vals: list
+    """
     var = row[:5].strip()
     row = row.rstrip('\n')
     vals = []
@@ -80,15 +85,15 @@ vals: list
     return var, vals
 
 def get_rows(header, station):
-""" Produces a numpy array of station data based on a previously produced header and a list of MOS station data.
+    """ Produces a numpy array of station data based on a previously produced header and a list of MOS station data.
 
-Parameters:
-header: dictionary
-station: list of strings
+    Parameters:
+    header: dictionary
+    station: list of strings
 
-Returns:
-df: numpy array
-"""
+    Returns:
+        df: numpy array
+    """
     df = pd.DataFrame(header)
     for row in station[3:]:
         #cranky parsing issues
@@ -105,15 +110,15 @@ df: numpy array
     return df
 
 def parse_station(station):
-"""Creates a numpy array of station data from a list of MOS station data.
+    """Creates a numpy array of station data from a list of MOS station data.
 Incorporates get_header, get_fntime, and get_rows.
 
-Parameters:
-station: list of strings 
+    Parameters:
+    station: list of strings 
 
-Returns:
-df: numpy array
-"""
+    Returns:
+    df: numpy array
+    """
     if not station:
         return pd.DataFrame()
     header = get_header(station[0])
@@ -127,12 +132,25 @@ def write_station(station, saveout="modelruns"):
     header = get_header(station[0])
     runtime = str(header['runtime'])
     filename = f"{header['short_model']}_{header['station']}_{header['runtime'].strftime('%Y_%m_%d_%H')}.csv"
-    filepath = Path(saveout/filename)
-
-    if q.exists():
+    filepath = Path(saveout,filename)
+    
+    if not filepath.exists():
         header['ftime']= get_fntime(station[1], station[2], header)
         df = get_rows(header, station)
         df.to_csv(filepath, index=False)
-    else:
-        print(f"{filename} exists")
     return
+
+def get_stations(path):
+    #find new lines in the file
+    station = []
+    stations = []
+    with gzip.open(path, 'r') as f:
+        for i, line in enumerate(f):
+            if empty.match(line):
+                stations.append(station)
+                station = []
+            elif newline.match(line):
+                pass
+            else:
+                station.append(line.decode())
+    return stations
