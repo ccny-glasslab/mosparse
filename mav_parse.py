@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 # make a station object 
+import traceback
 
 empty= re.compile(b'\s+\n')
 newline = re.compile(b'1\n')
@@ -129,15 +130,19 @@ Incorporates get_header, get_fntime, and get_rows.
 def write_station(station, saveout="modelruns"):
     if not station:
         return
-    header = get_header(station[0])
-    runtime = str(header['runtime'])
-    filename = f"{header['short_model']}_{header['station']}_{header['runtime'].strftime('%Y_%m_%d_%H')}.csv"
-    filepath = Path(saveout,filename)
-    
-    if not filepath.exists():
-        header['ftime']= get_fntime(station[1], station[2], header)
-        df = get_rows(header, station)
-        df.to_csv(filepath, index=False)
+    try:
+       header = get_header(station[0])
+       runtime = str(header['runtime'])
+       name = f"{header['short_model']}_{header['station']}_{header['runtime'].strftime('%Y_%m_%d_%H')}"
+       filename = f"{name}.csv"
+       filepath = Path(saveout,filename)    
+       if not filepath.exists():
+           header['ftime']= get_fntime(station[1], station[2], header)
+           df = get_rows(header, station)
+           df.to_csv(filepath, index=False)
+    except Exception as e:
+        with(Path('logs',f'{filename}.log'), 'w') as f:
+            traceback.print_exc(file=f)
     return
 
 def get_stations(path):
