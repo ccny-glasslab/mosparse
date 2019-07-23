@@ -15,6 +15,13 @@ def test_get_fntime():
     truth = [datetime.datetime(2019, 1, 2, 0, 0), datetime.datetime(2019, 1, 2, 3, 0), datetime.datetime(2019, 1, 2, 6, 0), datetime.datetime(2019, 1, 2, 9, 0), datetime.datetime(2019, 1, 2, 12, 0), datetime.datetime(2019, 1, 2, 15, 0), datetime.datetime(2019, 1, 2, 18, 0), datetime.datetime(2019, 1, 2, 21, 0), datetime.datetime(2019, 1, 3, 0, 0), datetime.datetime(2019, 1, 3, 3, 0), datetime.datetime(2019, 1, 3, 6, 0), datetime.datetime(2019, 1, 3, 9, 0), datetime.datetime(2019, 1, 3, 12, 0), datetime.datetime(2019, 1, 3, 15, 0), datetime.datetime(2019, 1, 3, 18, 0), datetime.datetime(2019, 1, 3, 21, 0), datetime.datetime(2019, 1, 4, 0, 0), datetime.datetime(2019, 1, 4, 3, 0), datetime.datetime(2019, 1, 4, 6, 0), datetime.datetime(2019, 1, 4, 12, 0), datetime.datetime(2019, 1, 4, 18, 0)]
     assert fntimes==truth
     
+def test_get_fntime_date_values():
+    row1 = ' DT /JULY 15            /JULY 16                /JULY 17          /  \n'
+    row2 = ' HR   06 09 12 15 18 21 00 03 06 09 12 15 18 21 00 03 06 09 12 18 00 \n'
+    fntimes = mp.get_fntime(row1,row2,{'station':'K0V1', 'model':'AVN MOS GUIDANCE', 'runtime':datetime.datetime(2000,7,15,0,0, tzinfo=tzutc())}) 
+    truth = [datetime.datetime(2000, 7, 15, 6, 0), datetime.datetime(2000, 7, 15, 9, 0), datetime.datetime(2000, 7, 15, 12, 0), datetime.datetime(2000, 7, 15, 15, 0), datetime.datetime(2000, 7, 15, 18, 0), datetime.datetime(2000, 7, 15, 21, 0), datetime.datetime(2000, 7, 16, 0, 0), datetime.datetime(2000, 7, 16, 3, 0), datetime.datetime(2000, 7, 16, 6, 0), datetime.datetime(2000, 7, 16, 9, 0), datetime.datetime(2000, 7, 16, 12, 0), datetime.datetime(2000, 7, 16, 15, 0), datetime.datetime(2000, 7, 16, 18, 0), datetime.datetime(2000, 7, 16, 21, 0), datetime.datetime(2000, 7, 17, 0, 0), datetime.datetime(2000, 7, 17, 3, 0), datetime.datetime(2000, 7, 17, 6, 0), datetime.datetime(2000, 7, 17, 9, 0), datetime.datetime(2000, 7, 17, 12, 0), datetime.datetime(2000, 7, 17, 18, 0), datetime.datetime(2000, 7, 18, 0, 0)]
+    assert fntimes==truth
+    
 def test_parse_row_all_values():
     row5 = ' DPT  14 24 29 29 28 28 32 31 30 35 34 33 32 32 37 36 35 35 34 33 38 \n'
     var,vals = mp.parse_row(row5)

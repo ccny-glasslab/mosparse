@@ -10,7 +10,7 @@ import traceback
 import pandas as pd
 import numpy as np
 
-empty= re.compile(b'\s+\n')
+empty= re.compile(r'\s+\n')
 newline = re.compile(b'1\n')
 
 integer = ['TMP', 'DPT', 'WDR', 'WSP', 'CIG', 'VIS', 'N/X', 'P06', 'P12', 'POS', 'POZ','SNW']
@@ -54,21 +54,24 @@ def get_fntime(date_row, hour_row, header):
     year = header['runtime'].year
     
     finish_times = []
-    dt = -1
+    dt = 0
+    first_stopped = 0
     for hour in hours:
-        if hour == '00':
+        if first_stopped == 0:
+            first_stopped = 1
+        elif hour == '00':
             dt+=1
-        #try:   
-        month, day = dates[dt].split()
-       # except:
-       #     if dt > 0:
-       #         prevmonth, prevday = dates[dt-1].split()
-       #         currdate = datetime.datetime(int(year), int(prevmonth), int(prevday)) + datetime.timedelta(days=1)
-       #         month, day = currdate.month, currdate.day
-       #     else:
-       #         prevmonth, prevday = dates[dt+1].split()
-       #         currdate = datetime.datetime(int(year), int(prevmonth), int(prevday)) - datetime.timedelta(days=1)
-       #         month, day = currdate.month, currdate.day
+        try:   
+            month, day = dates[dt].split()
+        except:
+            #if dt > 0:
+            prevmonth, prevday = dates[dt-1].split()
+            currdate = dateutil.parser.parse(dates[dt-1]) + datetime.timedelta(days=1)
+            month, day = currdate.month, currdate.day
+            #else:
+            #    prevmonth, prevday = dates[dt+1].split()
+             #   currdate = datetime.datetime(int(year), int(prevmonth), int(prevday)) - datetime.timedelta(days=1)
+              #  month, day = currdate.month, currdate.day
             
         # half the values are strings, so create full string to parse
         # otherwise would have to cast to string or int
@@ -171,21 +174,19 @@ def write_station(station, saveout="modelruns", logs="log"):
 def _get_stations_other(path):
     with open(path, 'rb') as f:
         return get_main_stations(f)
+    
 def _get_stations_z(path):
     from unlzw import unlzw
     
     with open(path, 'rb') as fh:
         compressed_data = fh.read()
-        #print('A')
         uncompressed_data = unlzw(compressed_data)
-        uncompressed_data = uncompressed_data.decode(errors='ignore').split('\n')
-        for i in range(len(uncompressed_data)):
-            uncompressed_data[i] = uncompressed_data[i] + '\n'
-            uncompressed_data[i] = uncompressed_data[i].encode()
-        #print(uncompressed_data[0:20])
-        #print('B')
+        uncompressed_data = uncompressed_data.split(b'\n')
+        #uncompressed_data = uncompressed_data.decode(errors='ignore').split('\n')
+        #for i in range(len(uncompressed_data)):
+        #    uncompressed_data[i] = (uncompressed_data[i] + '\n').encode()
         return get_main_stations(uncompressed_data)
-        print('Z')
+        
 def _get_stations_gz(path):
     with gzip.open(path,'r') as f:
         return get_main_stations(f)
@@ -199,24 +200,16 @@ def get_stations(path):
         return _get_stations_z(path)
     else:
         return _get_stations_other(path)
-    try:
-        get_stations(path)
-    except Exceptions as e:
-        print(e, path)
+    
 def get_main_stations(f):
     station = []
     stations = []
-    #print('C')
     for i, line in enumerate(f):
             if empty.match(line):
                 stations.append(station)
                 station = []
-                #print('ABC')
             elif newline.match(line):
-                #print('DEF')
                 pass
             else:
                 station.append(line.decode())
-                #print('GHI')
-    #print('D')
     return stations
