@@ -1,11 +1,14 @@
+import os
 import re
 import dateutil
+import datetime
 import gzip
+import zlib
+from pathlib import Path
+import traceback
+
 import pandas as pd
 import numpy as np
-from pathlib import Path
-# make a station object 
-import traceback
 
 empty= re.compile(b'\s+\n')
 newline = re.compile(b'1\n')
@@ -55,7 +58,18 @@ def get_fntime(date_row, hour_row, header):
     for hour in hours:
         if hour == '00':
             dt+=1
+        #try:   
         month, day = dates[dt].split()
+       # except:
+       #     if dt > 0:
+       #         prevmonth, prevday = dates[dt-1].split()
+       #         currdate = datetime.datetime(int(year), int(prevmonth), int(prevday)) + datetime.timedelta(days=1)
+       #         month, day = currdate.month, currdate.day
+       #     else:
+       #         prevmonth, prevday = dates[dt+1].split()
+       #         currdate = datetime.datetime(int(year), int(prevmonth), int(prevday)) - datetime.timedelta(days=1)
+       #         month, day = currdate.month, currdate.day
+            
         # half the values are strings, so create full string to parse
         # otherwise would have to cast to string or int
         fntime = f'{year} {month} {day} {hour}'
@@ -127,35 +141,82 @@ Incorporates get_header, get_fntime, and get_rows.
     df = get_rows(header, station)
     return df
 
-def write_station(station, saveout="modelruns"):
+def write_station(station, saveout="modelruns", logs="log"):
     if not station:
         return
+
+    if not Path(saveout).exists():
+        os.mkdir(saveout)
+    
+    if not Path(logs).exists():
+        os.mkdir(logs)
+
     try:
-       header = get_header(station[0])
-       runtime = str(header['runtime'])
-       name = f"{header['short_model']}_{header['station']}_{header['runtime'].strftime('%Y_%m_%d_%H')}"
-       filename = f"{name}.csv"
-       filepath = Path(saveout,filename)    
-       if not filepath.exists():
-           header['ftime']= get_fntime(station[1], station[2], header)
-           df = get_rows(header, station)
-           df.to_csv(filepath, index=False)
+        header = get_header(station[0])
+        runtime = str(header['runtime'])
+        name = f"{header['short_model']}_{header['station']}_{header['runtime'].strftime('%Y_%m_%d_%H')}"
+        filename = f"{name}.csv"
+        filepath = Path(saveout,filename)    
+        if not filepath.exists():
+            header['ftime']= get_fntime(station[1], station[2], header)
+            df = get_rows(header, station)
+            df.to_csv(filepath, index=False)
     except Exception as e:
-        with(Path('logs',f'{filename}.log'), 'w') as f:
+        with open(Path(logs,f'{filename}.log'), 'w') as f:
+            print(station, file=f)
             traceback.print_exc(file=f)
+            
     return
 
+def _get_stations_other(path):
+    with open(path, 'rb') as f:
+        return get_main_stations(f)
+def _get_stations_z(path):
+    from unlzw import unlzw
+    
+    with open(path, 'rb') as fh:
+        compressed_data = fh.read()
+        #print('A')
+        uncompressed_data = unlzw(compressed_data)
+        uncompressed_data = uncompressed_data.decode(errors='ignore').split('\n')
+        for i in range(len(uncompressed_data)):
+            uncompressed_data[i] = uncompressed_data[i] + '\n'
+            uncompressed_data[i] = uncompressed_data[i].encode()
+        #print(uncompressed_data[0:20])
+        #print('B')
+        return get_main_stations(uncompressed_data)
+        print('Z')
+def _get_stations_gz(path):
+    with gzip.open(path,'r') as f:
+        return get_main_stations(f)
+
 def get_stations(path):
-    #find new lines in the file
+    name, ext = os.path.splitext(path)
+    #print(ext, path)
+    if ext == '.gz':
+        return _get_stations_gz(path)
+    elif ext == '.Z':
+        return _get_stations_z(path)
+    else:
+        return _get_stations_other(path)
+    try:
+        get_stations(path)
+    except Exceptions as e:
+        print(e, path)
+def get_main_stations(f):
     station = []
     stations = []
-    with open(path, 'rb') as f:
-        for i, line in enumerate(f):
+    #print('C')
+    for i, line in enumerate(f):
             if empty.match(line):
                 stations.append(station)
                 station = []
+                #print('ABC')
             elif newline.match(line):
+                #print('DEF')
                 pass
             else:
                 station.append(line.decode())
+                #print('GHI')
+    #print('D')
     return stations

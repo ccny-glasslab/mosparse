@@ -8,10 +8,12 @@ from dask.diagnostics import ProgressBar
 
 import glob
 from pathlib import Path
-Path("/opt", "data", "avnmav", "avnmav").exists()
-files = glob.glob("/opt/data/avnmav/avnmav/mav*")
-import os
-os.mkdir("modelruns")
+#Path("/opt", "data", "avnmav", "avnmav").exists()
+#files = glob.glob("/opt/data/avnmav/avnmav/mav*")
+
+files = glob.glob('avnmav/mav*')
+if not files:
+    raise ValueError("files not found")
 
 pb = db.from_sequence(files).map(mp.get_stations)
 dfs = pb.flatten().map(mp.write_station)
