@@ -107,5 +107,5 @@ def test_get_rows():
  ' OBV   N  N  N  N  N FG FG HZ  N HZ BR BR FG FG FG HZ  N BR BR FG FG \n']
     return mp.get_rows(header, station)
 
-
+def test_get_stations
 

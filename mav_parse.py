@@ -10,7 +10,7 @@ import traceback
 import pandas as pd
 import numpy as np
 
-empty= re.compile(r'\s+\n')
+empty= re.compile(b'\s+\n')
 newline = re.compile(b'1\n')
 
 integer = ['TMP', 'DPT', 'WDR', 'WSP', 'CIG', 'VIS', 'N/X', 'P06', 'P12', 'POS', 'POZ','SNW']
@@ -182,6 +182,9 @@ def _get_stations_z(path):
         compressed_data = fh.read()
         uncompressed_data = unlzw(compressed_data)
         uncompressed_data = uncompressed_data.split(b'\n')
+        for i in range(len(uncompressed_data)):
+            uncompressed_data[i] = uncompressed_data[i] + b'\n'
+       # print(uncompressed_data[0:20])
         #uncompressed_data = uncompressed_data.decode(errors='ignore').split('\n')
         #for i in range(len(uncompressed_data)):
         #    uncompressed_data[i] = (uncompressed_data[i] + '\n').encode()
