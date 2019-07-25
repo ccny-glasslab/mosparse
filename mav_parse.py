@@ -13,19 +13,24 @@ import numpy as np
 empty= re.compile(b'\s+\n')
 newline = re.compile(b'1\n')
 
-integer = ['TMP', 'DPT', 'WDR', 'WSP', 'CIG', 'VIS', 'N/X', 'P06', 'P12', 'POS', 'POZ','SNW']
+integer = ['TMP', 'DPT', 'WDR', 'WSP', 'CIG', 'VIS', 'N/X', 'X/N', 'P06', 'P12', 'POS', 'POZ','SNW']
 categorical = ['CLD','OBV', 'TYP', 'Q06', 'Q12', 'T06', 'T12']
-incremental = ['N/X', 'P06', 'P12', 'Q06', 'Q12','T06', 'T12','SNW']
+incremental = ['N/X', 'X/N', 'P06', 'P12', 'Q06', 'Q12','T06', 'T12','SNW']
 incremental2 = ['T06' , 'T12']
 
 def get_header(header_row):
-    """ Creates a dictionary containing the station, model, and run time based on the first row of the MOS data. The row should only come from MOS data.
+    """ 
+    Creates a dictionary containing the station, model, and run time based on the first row of the MOS data. The row should only come from MOS data.
 
-    Parameters:
-    header_row: string
+    Parameters
+    -----------
+    header_row : string
+        Row with name, model, and runtime of a station.
 
-    Returns:
-    header: dictionary
+    Returns
+    --------
+    header : dictionary
+        Values of the name, model, and runtime of a station.
     """
     header = {}
     header['station'], c1, c2, c3, date, time, tz =  header_row.split()
@@ -35,15 +40,23 @@ def get_header(header_row):
     return header
 
 def get_fntime(date_row, hour_row, header):
-    """ Creates a list of dateutil dates based on a header and the date and hour rows of the MOS data.
+    """ 
+    Creates a list of dateutil dates based on a header and the date and hour rows of the MOS data.
         
-    Parameters:
-    date_row: string
-    hour_row: string
-    header: dictionary
-    
-    Returns:
-    finish_times: list
+    Parameters
+    -----------
+    date_row : string
+        The dates the model is predicting 
+    hour_row : string
+        The hours the model is prediction
+    header : dictionary
+        Values of the name, model, and runtime of a station.
+
+    Returns
+    --------
+    finish_times : list
+        List of the time in hour the model stopped running.
+        
     """
     #(DT, Hr tuples), which is the finish time column
     #http://www.meteor.wisc.edu/~hopkins/aos100/mos-doc.htm
@@ -80,13 +93,20 @@ def get_fntime(date_row, hour_row, header):
     return finish_times
 
 def parse_row(row):
-    """Takes a row of MOS data and returns the variable and a list of values.
+    """
+    Takes a row of MOS data and returns the variable and a list of values.
    
-    Parameters:
-    row: string
-    Returns:
-    var: string
-    vals: list
+    Parameters
+    -----------
+    row : string
+        The rows where the data collected is stored.
+    
+    Returns
+    --------
+    var : string
+        Value spaces that are part of the rows
+    vals : list
+        Value that are part of the rows
     """
     var = row[:5].strip()
     row = row.rstrip('\n')
@@ -103,14 +123,20 @@ def parse_row(row):
     return var, vals
 
 def get_rows(header, station):
-    """ Produces a numpy array of station data based on a previously produced header and a list of MOS station data.
+    """ 
+    Produces a numpy array of station data based on a previously produced header and a list of MOS station data.
 
-    Parameters:
-    header: dictionary
-    station: list of strings
+    Parameters
+    -----------
+    header : dictionary
+        Values of the name, model, and runtime of a station.
+    station : list of strings
+        All the data colleceted by the model.
 
-    Returns:
-        df: numpy array
+    Returns
+    --------
+    df : numpy array
+        Header and station pt together.
     """
     df = pd.DataFrame(header)
     for row in station[3:]:
@@ -128,14 +154,19 @@ def get_rows(header, station):
     return df
 
 def parse_station(station):
-    """Creates a numpy array of station data from a list of MOS station data.
+    """
+    Creates a numpy array of station data from a list of MOS station data.
 Incorporates get_header, get_fntime, and get_rows.
 
-    Parameters:
-    station: list of strings 
+    Parameters
+    -----------
+    station : list of strings 
+        The data collected by the model.
 
-    Returns:
-    df: numpy array
+    Returns
+    --------
+    df : numpy array
+        Header and station pt together.
     """
     if not station:
         return pd.DataFrame()
@@ -145,6 +176,25 @@ Incorporates get_header, get_fntime, and get_rows.
     return df
 
 def write_station(station, saveout="modelruns", logs="log"):
+    '''
+    Seperates the stations with errors and the stations without errors into folders log and modelruns, respectively.
+    
+    Parameters
+    -----------
+    station : list of strings
+        The data collected by the model.
+    
+    saveout : string
+        Folder where the stations without errors are stored.
+    
+    log : string
+        Folder where the stations with errors are stored.
+    
+    Returns
+    --------
+    station : list of strings
+        The data collected by the model.
+    '''
     if not station:
         return
 
@@ -172,10 +222,37 @@ def write_station(station, saveout="modelruns", logs="log"):
     return
 
 def _get_stations_other(path):
+    '''
+    Opens and reads files that are not .Z and .gz formats.
+    
+    Parameters
+    -----------
+    path : string 
+        Directions to the file you are going to use.
+    
+    Returns
+    --------
+    station : list of strings
+        The data collected by the model.
+    '''
+    
     with open(path, 'rb') as f:
         return get_main_stations(f)
     
 def _get_stations_z(path):
+    '''
+    Opens and reads files that are of the format .Z.
+    
+    Parameters
+    -----------
+    path : string 
+        Directions to the file you are going to use.
+    
+    Returns
+    --------
+    station : list of strings
+        The data collected by the model.
+    '''
     from unlzw import unlzw
     
     with open(path, 'rb') as fh:
@@ -191,10 +268,36 @@ def _get_stations_z(path):
         return get_main_stations(uncompressed_data)
         
 def _get_stations_gz(path):
+    '''
+    Opens and reads files that are of the format .gz
+    
+    Parameters
+    ------------
+    path : string 
+        Directions to the file you are going to use.
+    
+    Returns
+    --------
+    station : list of strings
+        The data collected by the model.
+    '''
     with gzip.open(path,'r') as f:
         return get_main_stations(f)
 
 def get_stations(path):
+    '''
+    Determines the extension of the file
+    
+    Parameters
+    -----------
+    path : string 
+        Directions to the file you are going to use.
+    
+    Returns
+    --------
+    station : list of strings
+        The data collected by the model.
+    '''
     name, ext = os.path.splitext(path)
     #print(ext, path)
     if ext == '.gz':
@@ -205,6 +308,19 @@ def get_stations(path):
         return _get_stations_other(path)
     
 def get_main_stations(f):
+    '''
+    Creates a format with the stations to make it more easily readable.
+    
+    Parameters
+    -----------
+    f : open file object
+        The object being used to open the file.
+    
+    Returns
+    --------
+    station : list of strings
+        The data collected by the model.
+    '''
     station = []
     stations = []
     for i, line in enumerate(f):
