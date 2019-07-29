@@ -125,5 +125,7 @@ def test_get_rows():
  ' OBV   N  N  N  N  N FG FG HZ  N HZ BR BR FG FG FG HZ  N BR BR FG FG \n']
     return mp.get_rows(header, station)
 
-#def test_get_stations
-
+def test_get_station_gz():
+    truth = mp.get_stations('hello_world.txt.gz')
+    expected = [['hello world, how are you'], ['1 1 2 3 5 8 13 21 34 55 89', 'lots of numbers']]
+    assert truth == expected
