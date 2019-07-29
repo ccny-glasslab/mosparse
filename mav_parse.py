@@ -81,7 +81,6 @@ def get_fntime(date_row, hour_row, header):
                 year += 1
         except:
             #if dt > 0:
-            prevmonth, prevday = dates[dt-1].split()
             currdate = dateutil.parser.parse(str(year) + ' ' + dates[dt-1]) + datetime.timedelta(days=1)
             year, month, day = currdate.year, currdate.month, currdate.day
             #else:
