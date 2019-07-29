@@ -74,9 +74,10 @@ def get_fntime(date_row, hour_row, header):
             first_stopped = 1
         elif hour == '00':
             dt+=1
-        try:   
-            month, day = dates[dt].split()
-            if month == 'JAN' and day == '1' and hour == '00':
+        try:
+            currdate = dateutil.parser.parse(dates[dt])
+            month, day = currdate.month, currdate.day
+            if month == 1 and day == 1 and hour == '00':
                 year += 1
         except:
             #if dt > 0:
