@@ -177,7 +177,7 @@ Incorporates get_header, get_fntime, and get_rows.
     df = get_rows(header, station)
     return df
 
-def write_station(station, saveout="/opt/data/modelruns-new", logs="log"):
+def write_station(station, saveout="mos_out", logs="log"):
     '''
     Seperates the stations with errors and the stations without errors into folders log and modelruns, respectively.
     
@@ -215,12 +215,11 @@ def write_station(station, saveout="/opt/data/modelruns-new", logs="log"):
         if not filepath.exists():
             header['ftime']= get_fntime(station[1], station[2], header)
             df = get_rows(header, station)
-            df.to_csv(filepath, index=False)
+            df.to_csv(filepath, index=False, compression='gzip')
     except Exception as e:
         with open(Path(logs,f'{filename}.log'), 'w') as f:
             print(station, file=f)
             traceback.print_exc(file=f)
-            
     return
 
 def _get_stations_other(path):
