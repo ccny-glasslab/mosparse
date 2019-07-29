@@ -13,9 +13,9 @@ import numpy as np
 empty= re.compile(b'\s+\n')
 newline = re.compile(b'1\n')
 
-integer = ['TMP', 'DPT', 'WDR', 'WSP', 'CIG', 'VIS', 'N/X', 'P06', 'P12', 'POS', 'POZ','SNW']
+integer = ['TMP', 'DPT', 'WDR', 'WSP', 'CIG', 'VIS', 'N/X', 'X/N', 'P06', 'P12', 'POS', 'POZ','SNW']
 categorical = ['CLD','OBV', 'TYP', 'Q06', 'Q12', 'T06', 'T12']
-incremental = ['N/X', 'P06', 'P12', 'Q06', 'Q12','T06', 'T12','SNW']
+incremental = ['N/X', 'X/N', 'P06', 'P12', 'Q06', 'Q12','T06', 'T12','SNW']
 incremental2 = ['T06' , 'T12']
 
 def get_header(header_row):
@@ -63,11 +63,13 @@ def get_fntime(date_row, hour_row, header):
             dt+=1
         try:   
             month, day = dates[dt].split()
+            if month == 'JAN' and day == '1' and hour == '00':
+                year += 1
         except:
             #if dt > 0:
             prevmonth, prevday = dates[dt-1].split()
-            currdate = dateutil.parser.parse(dates[dt-1]) + datetime.timedelta(days=1)
-            month, day = currdate.month, currdate.day
+            currdate = dateutil.parser.parse(str(year) + ' ' + dates[dt-1]) + datetime.timedelta(days=1)
+            year, month, day = currdate.year, currdate.month, currdate.day
             #else:
             #    prevmonth, prevday = dates[dt+1].split()
              #   currdate = datetime.datetime(int(year), int(prevmonth), int(prevday)) - datetime.timedelta(days=1)
@@ -144,7 +146,7 @@ Incorporates get_header, get_fntime, and get_rows.
     df = get_rows(header, station)
     return df
 
-def write_station(station, saveout="modelruns", logs="log"):
+def write_station(station, saveout="/opt/data/modelruns-new", logs="log"):
     if not station:
         return
 
@@ -158,7 +160,7 @@ def write_station(station, saveout="modelruns", logs="log"):
         header = get_header(station[0])
         runtime = str(header['runtime'])
         name = f"{header['short_model']}_{header['station']}_{header['runtime'].strftime('%Y_%m_%d_%H')}"
-        filename = f"{name}.csv"
+        filename = f"{name}.csv.gz"
         filepath = Path(saveout,filename)    
         if not filepath.exists():
             header['ftime']= get_fntime(station[1], station[2], header)
@@ -177,7 +179,6 @@ def _get_stations_other(path):
     
 def _get_stations_z(path):
     from unlzw import unlzw
-    
     with open(path, 'rb') as fh:
         compressed_data = fh.read()
         uncompressed_data = unlzw(compressed_data)
@@ -196,7 +197,6 @@ def _get_stations_gz(path):
 
 def get_stations(path):
     name, ext = os.path.splitext(path)
-    #print(ext, path)
     if ext == '.gz':
         return _get_stations_gz(path)
     elif ext == '.Z':

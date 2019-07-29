@@ -22,6 +22,24 @@ def test_get_fntime_date_values():
     truth = [datetime.datetime(2000, 7, 15, 6, 0), datetime.datetime(2000, 7, 15, 9, 0), datetime.datetime(2000, 7, 15, 12, 0), datetime.datetime(2000, 7, 15, 15, 0), datetime.datetime(2000, 7, 15, 18, 0), datetime.datetime(2000, 7, 15, 21, 0), datetime.datetime(2000, 7, 16, 0, 0), datetime.datetime(2000, 7, 16, 3, 0), datetime.datetime(2000, 7, 16, 6, 0), datetime.datetime(2000, 7, 16, 9, 0), datetime.datetime(2000, 7, 16, 12, 0), datetime.datetime(2000, 7, 16, 15, 0), datetime.datetime(2000, 7, 16, 18, 0), datetime.datetime(2000, 7, 16, 21, 0), datetime.datetime(2000, 7, 17, 0, 0), datetime.datetime(2000, 7, 17, 3, 0), datetime.datetime(2000, 7, 17, 6, 0), datetime.datetime(2000, 7, 17, 9, 0), datetime.datetime(2000, 7, 17, 12, 0), datetime.datetime(2000, 7, 17, 18, 0), datetime.datetime(2000, 7, 18, 0, 0)]
     assert fntimes==truth
     
+def test_get_fntime_yearend():
+    row1 = ' DT /DEC   31/JAN   1    /   \n'
+    row2 = 'HR   06 12 18 00 06 12 18 00 \n'
+    
+    fntimes = mp.get_fntime(row1,row2,{'station':'KNYC', 'model':'GFS MOS GUIDANCE', 'runtime':datetime.datetime(2000,12,31,0,0, tzinfo=tzutc())})
+    truth = [datetime.datetime(2000,12,31,6,0), datetime.datetime(2000,12,31,12,0), datetime.datetime(2000,12,31,18,0), datetime.datetime(2001,1,1,0,0), datetime.datetime(2001,1,1,6,0), datetime.datetime(2001,1,1,12,0), datetime.datetime(2001,1,1,18,0), datetime.datetime(2001,1,2,0,0)]
+    
+    assert fntimes==truth
+    
+def test_get_fntime_leap_year():
+    row1 = ' DT /FEB  27      /FEB  28                /FEB  29             /     \n'
+    row2 = ' HR   12 15 18 21 00 03 06 09 12 15 18 21 00 03 06 09 12 15 18 00 06 \n'
+    fntimes = mp.get_fntime(row1, row2,{'station':'KNYC', 'model':'GFS MOS GUIDANCE', 'runtime':datetime.datetime(2016,2,27,6,0, tzinfo=tzutc())})
+    
+    truth = [datetime.datetime(2016, 2, 27, 12, 0), datetime.datetime(2016, 2, 27, 15, 0), datetime.datetime(2016, 2, 27, 18, 0), datetime.datetime(2016, 2, 27, 21, 0), datetime.datetime(2016, 2, 28, 0, 0), datetime.datetime(2016, 2, 28, 3, 0), datetime.datetime(2016, 2, 28, 6, 0), datetime.datetime(2016, 2, 28, 9, 0), datetime.datetime(2016, 2, 28, 12, 0), datetime.datetime(2016, 2, 28, 15, 0), datetime.datetime(2016, 2, 28, 18, 0), datetime.datetime(2016, 2, 28, 21, 0), datetime.datetime(2016, 2, 29, 0, 0), datetime.datetime(2016, 2, 29, 3, 0), datetime.datetime(2016, 2, 29, 6, 0), datetime.datetime(2016, 2, 29, 9, 0), datetime.datetime(2016, 2, 29, 12, 0), datetime.datetime(2016, 2, 29, 15, 0), datetime.datetime(2016, 2, 29, 18, 0), datetime.datetime(2016, 3, 1, 0, 0), datetime.datetime(2016, 3, 1, 6, 0)]
+    
+    assert fntimes==truth    
+    
 def test_parse_row_all_values():
     row5 = ' DPT  14 24 29 29 28 28 32 31 30 35 34 33 32 32 37 36 35 35 34 33 38 \n'
     var,vals = mp.parse_row(row5)
@@ -107,5 +125,5 @@ def test_get_rows():
  ' OBV   N  N  N  N  N FG FG HZ  N HZ BR BR FG FG FG HZ  N BR BR FG FG \n']
     return mp.get_rows(header, station)
 
-def test_get_stations
+#def test_get_stations
 
