@@ -149,10 +149,9 @@ def get_rows(header, station):
         if var in categorical:
             df[var] = np.array(vals, dtype='object')
         elif var in integer: # cast to int
-            df[var] = np.array(vals, dtype='float64')
+            df[var] = np.array(vals, dtype='int64')
         else:
             raise KeyError(f"{var} parsing not supported")
-        
     return df
 
 def parse_station(station):
@@ -216,6 +215,7 @@ def write_station(station, saveout="mos_out", logs="log"):
             header['ftime']= get_fntime(station[1], station[2], header)
             df = get_rows(header, station)
             df.to_csv(filepath, index=False, compression='gzip')
+            del df
     except Exception as e:
         with open(Path(logs,f'{filename}.log'), 'w') as f:
             print(station, file=f)
@@ -299,13 +299,18 @@ def get_stations(path):
         The data collected by the model.
     '''
     name, ext = os.path.splitext(path)
+
+    with open(Path('filelist.log'), 'w+') as f:
+        print(path, file=f)
+                    
     if ext == '.gz':
         return _get_stations_gz(path)
     elif ext == '.Z':
         return _get_stations_z(path)
     else:
         return _get_stations_other(path)
-    
+
+
 def get_main_stations(f):
     '''
     Creates a format with the stations to make it more easily readable.
