@@ -1,3 +1,6 @@
+'''
+The libraries that will be used for this example.
+'''
 import re
 import gzip
 import mav_parse as mp
@@ -10,11 +13,15 @@ import glob
 from pathlib import Path
 #Path("/opt", "data", "avnmav", "avnmav").exists()
 #files = glob.glob("/opt/data/avnmav/avnmav/mav*")
-
+'''
+Directions to get to the file you want to open. Prints an error if the file is not found.
+'''
 files = glob.glob('mav200005.Z')
 if not files:
     raise ValueError("files not found")
-
+'''
+From the sequence of the first files it is mapping get_stations. Flattening the mapped write_station data.
+'''
 pb = db.from_sequence(files).map(mp.get_stations)
 dfs = pb.flatten().map(mp.write_station)
 with ProgressBar():
