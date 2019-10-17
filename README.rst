@@ -13,9 +13,13 @@ Model Output Statistics are the future predictions of models at various location
 
 
 * Free software: 3-clause BSD license
-* Documentation: (COMING SOON!) https://oscarlucero15.github.io/mosparse.
+* Documentation: (COMING SOON!) 
 
+Data
+-----
+* GFS MOS: https://sats.nws.noaa.gov/~mos/archives/mav.html
+^ GHCN: ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/
 Features
 --------
 
-* TODO
+* 
