@@ -13,10 +13,13 @@ import numpy as np
 empty= re.compile(b'\s+\n')
 newline = re.compile(b'1\n')
 
-integer = ['TMP', 'DPT', 'WDR', 'WSP', 'CIG', 'VIS', 'N/X', 'X/N', 'P06', 'P12', 'POS', 'POZ','SNW']
+integer = ['N/X', 'X/N', 'TMP', 'DPT', 'WDR', 'WSP', 'CIG', 'VIS', 'P06', 'P12', 'POS', 'POZ','SNW']
 categorical = ['CLD','OBV', 'TYP', 'Q06', 'Q12', 'T06', 'T12']
-incremental = ['N/X', 'X/N', 'P06', 'P12', 'Q06', 'Q12','T06', 'T12','SNW']
-incremental2 = ['T06' , 'T12']
+#all_cols = integer + categorical
+all_cols = ['N/X', 'X/N', 'TMP', 'DPT', 'CLD', 'WDR', 'WSP', 'P06', 'P12', 'Q06', 'Q12', 'T06', 'T12', 'CIG', 'VIS', 'OBV', 'TYP', 'POS', 'POZ','SNW']
+all_df = pd.DataFrame(columns=all_cols)
+#incremental = ['N/X', 'X/N', 'P06', 'P12', 'Q06', 'Q12','T06', 'T12','SNW']
+#incremental2 = ['T06' , 'T12']
 
 def get_header(header_row):
     """ 
@@ -140,7 +143,7 @@ def get_rows(header, station):
     df : numpy array
         Header and station pt together.
     """
-    df = pd.DataFrame(header)
+    df = pd.DataFrame(header, columns=list(header.keys()) + all_cols)
     for row in station[3:]:
         #cranky parsing issues
         var, vals = parse_row(row)
@@ -177,7 +180,7 @@ Incorporates get_header, get_fntime, and get_rows.
     df = get_rows(header, station)
     return df
 
-def write_station(station, saveout="/opt/data/modelruns-new", logs="log"):
+def write_station(station, saveout="../../mosout/modelrun", logs="../../mosout/log"):
     '''
     Seperates the stations with errors and the stations without errors into folders log and modelruns, respectively.
     
@@ -209,13 +212,16 @@ def write_station(station, saveout="/opt/data/modelruns-new", logs="log"):
     try:
         header = get_header(station[0])
         runtime = str(header['runtime'])
-        name = f"{header['short_model']}_{header['station']}_{header['runtime'].strftime('%Y_%m_%d_%H')}"
+        #name = f"{header['short_model']}_{header['station']}_{header['runtime'].strftime('%Y_%m_%d_%H')}"
+        name = f"{header['short_model']}_{header['runtime'].strftime('%Y_%m_%d_%H')}"
         filename = f"{name}.csv.gz"
         filepath = Path(saveout,filename)    
+        header['ftime']= get_fntime(station[1], station[2], header)
+        df = get_rows(header, station)
         if not filepath.exists():
-            header['ftime']= get_fntime(station[1], station[2], header)
-            df = get_rows(header, station)
-            df.to_csv(filepath, index=False)
+            df.to_csv(filepath, index=False, mode="a")
+        else:
+            df.to_csv(filepath, index=False, mode="a", header=False)
     except Exception as e:
         with open(Path(logs,f'{filename}.log'), 'w') as f:
             print(station, file=f)
