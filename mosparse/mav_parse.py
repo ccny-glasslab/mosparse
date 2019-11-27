@@ -15,8 +15,8 @@ newline = re.compile(b'1\n')
 
 integer = ['N/X', 'X/N', 'TMP', 'DPT', 'WDR', 'WSP', 'CIG', 'VIS', 'P06', 'P12', 'POS', 'POZ','SNW']
 categorical = ['CLD','OBV', 'TYP', 'Q06', 'Q12', 'T06', 'T12']
-#all_cols = integer + categorical
-all_cols = ['N/X', 'X/N', 'TMP', 'DPT', 'CLD', 'WDR', 'WSP', 'P06', 'P12', 'Q06', 'Q12', 'T06', 'T12', 'CIG', 'VIS', 'OBV', 'TYP', 'POS', 'POZ','SNW']
+all_cols = integer + categorical
+all_cols.pop('N/X')
 all_df = pd.DataFrame(columns=all_cols)
 #incremental = ['N/X', 'X/N', 'P06', 'P12', 'Q06', 'Q12','T06', 'T12','SNW']
 #incremental2 = ['T06' , 'T12']
@@ -59,6 +59,8 @@ def get_fntime(date_row, hour_row, header):
     --------
     finish_times : list
         List of the time in hour the model stopped running.
+    forecast_times : list
+        List of the amount of hours the model is predicting in advance.
         
     """
     #(DT, Hr tuples), which is the finish time column
@@ -95,7 +97,8 @@ def get_fntime(date_row, hour_row, header):
         # otherwise would have to cast to string or int
         fntime = f'{year} {month} {day} {hour}'
         finish_times.append(dateutil.parser.parse(fntime))
-    return finish_times
+        #forecast_times.append(int((((finish_times[-1])-(header['runtime'].replace(tzinfo=None))).total_seconds())/3600))
+    return finish_times #also finish_times
 
 def parse_row(row):
     """
@@ -150,9 +153,16 @@ def get_rows(header, station):
         # data type
         
         if var in categorical:
+            #try:
             df[var] = np.array(vals, dtype='object')
+
         elif var in integer: # cast to int
-            df[var] = np.array(vals, dtype='float64')
+            if (var == 'N/X'):
+                df['X/N'] = np.array(vals, dtype='float64')
+            else:
+                #try:
+                df[var] = np.array(vals, dtype='object')
+
         else:
             raise KeyError(f"{var} parsing not supported")
         
@@ -176,7 +186,7 @@ Incorporates get_header, get_fntime, and get_rows.
     if not station:
         return pd.DataFrame()
     header = get_header(station[0])
-    header['ftime']= get_fntime(station[1], station[2], header)
+    header['ftime'] = get_fntime(station[1], station[2], header) #also header['fhour']
     df = get_rows(header, station)
     return df
 
@@ -218,6 +228,7 @@ def write_station(station, saveout="../../mosout/modelrun", logs="../../mosout/l
         filepath = Path(saveout,filename)    
         header['ftime']= get_fntime(station[1], station[2], header)
         df = get_rows(header, station)
+        
         if not filepath.exists():
             df.to_csv(filepath, index=False, mode="a")
         else:
