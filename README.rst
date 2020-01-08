@@ -18,7 +18,8 @@ Model Output Statistics are the future predictions of models at various location
 Data
 -----
 * GFS MOS: https://sats.nws.noaa.gov/~mos/archives/mav.html
-^ GHCN: ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/
+* GHCN: ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/
+
 Features
 --------
 
