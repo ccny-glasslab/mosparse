@@ -1,6 +1,6 @@
 from dateutil.tz import tzutc 
 import datetime
-import mav_parse as mp
+import mosparse.mav_parse as mp
 import pandas as pd
 from pathlib import Path
 

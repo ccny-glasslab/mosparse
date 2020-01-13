@@ -16,8 +16,8 @@ newline = re.compile(b'1\n')
 integer = ['N/X', 'X/N', 'TMP', 'DPT', 'WDR', 'WSP', 'CIG', 'VIS', 'P06', 'P12', 'POS', 'POZ','SNW']
 categorical = ['CLD','OBV', 'TYP', 'Q06', 'Q12', 'T06', 'T12']
 all_cols = integer + categorical
-all_cols.pop('N/X')
-all_df = pd.DataFrame(columns=all_cols)
+# pop N/X
+all_df = pd.DataFrame(columns=all_cols[1:]) 
 #incremental = ['N/X', 'X/N', 'P06', 'P12', 'Q06', 'Q12','T06', 'T12','SNW']
 #incremental2 = ['T06' , 'T12']
 
