@@ -2,8 +2,6 @@ import os
 import re
 import dateutil
 import datetime
-import gzip
-import zlib
 from pathlib import Path
 import traceback
 
@@ -124,7 +122,7 @@ def parse_row(row):
         if ('/' in val):
             vals[-1] = None
             vals.append(row[i-3:i+3].strip())
-        elif val is not '':
+        elif val != '':
             vals.append(row[i:i+3].strip())
         else:
             vals.append(None)
@@ -240,89 +238,6 @@ def write_station(station, saveout="../../mosout/modelrun", logs="../../mosout/l
             
     return
 
-def _get_stations_other(path):
-    '''
-    Opens and reads files that are not .Z and .gz formats.
-    
-    Parameters
-    -----------
-    path : string 
-        Directions to the file you are going to use.
-    
-    Returns
-    --------
-    station : list of strings
-        The data collected by the model.
-    '''
-    
-    with open(path, 'rb') as f:
-        return get_main_stations(f)
-    
-def _get_stations_z(path):
-    '''
-    Opens and reads files that are of the format .Z.
-    
-    Parameters
-    -----------
-    path : string 
-        Directions to the file you are going to use.
-    
-    Returns
-    --------
-    station : list of strings
-        The data collected by the model.
-    '''
-    from unlzw import unlzw
-    with open(path, 'rb') as fh:
-        compressed_data = fh.read()
-        uncompressed_data = unlzw(compressed_data)
-        uncompressed_data = uncompressed_data.split(b'\n')
-        for i in range(len(uncompressed_data)):
-            uncompressed_data[i] = uncompressed_data[i] + b'\n'
-       # print(uncompressed_data[0:20])
-        #uncompressed_data = uncompressed_data.decode(errors='ignore').split('\n')
-        #for i in range(len(uncompressed_data)):
-        #    uncompressed_data[i] = (uncompressed_data[i] + '\n').encode()
-        return get_main_stations(uncompressed_data)
-        
-def _get_stations_gz(path):
-    '''
-    Opens and reads files that are of the format .gz
-    
-    Parameters
-    ------------
-    path : string 
-        Directions to the file you are going to use.
-    
-    Returns
-    --------
-    station : list of strings
-        The data collected by the model.
-    '''
-    with gzip.open(path,'r') as f:
-        return get_main_stations(f)
-
-def get_stations(path):
-    '''
-    Determines the extension of the file
-    
-    Parameters
-    -----------
-    path : string 
-        Directions to the file you are going to use.
-    
-    Returns
-    --------
-    station : list of strings
-        The data collected by the model.
-    '''
-    name, ext = os.path.splitext(path)
-    if ext == '.gz':
-        return _get_stations_gz(path)
-    elif ext == '.Z':
-        return _get_stations_z(path)
-    else:
-        return _get_stations_other(path)
     
 def get_main_stations(f):
     '''

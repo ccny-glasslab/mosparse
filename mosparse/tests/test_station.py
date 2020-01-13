@@ -1,8 +1,11 @@
-from dateutil.tz import tzutc 
 import datetime
+from pathlib import Path
+
+from dateutil.tz import tzutc 
 import mosparse.mav_parse as mp
 import pandas as pd
-from pathlib import Path
+import pytest
+
 
 def test_get_header():
     header = mp.get_header(' KMVY   GFS MOS GUIDANCE    1/04/2019  1800 UTC                      \n')
@@ -94,12 +97,12 @@ def test_parse_station_empty():
     expected = pd.DataFrame()
     assert pd.DataFrame.equals(truth, expected)
 
+@pytest.mark.skipif(not Path("data", "kdsm_x.csv").exists(), reason="missing ground truth file")
 def test_parse_station():
     station = [' KDSM   GFS MOS GUIDANCE    1/01/2019  1800 UTC                      \n', ' DT /JAN   2                  /JAN   3                /JAN   4       \n', ' HR   00 03 06 09 12 15 18 21 00 03 06 09 12 15 18 21 00 03 06 12 18 \n', ' N/X              11          32          22          40       29    \n', ' TMP  17 16 15 15 15 17 27 31 28 27 26 25 26 28 35 39 36 34 33 32 44 \n', ' DPT   7  7  7  7  6  7 11 13 14 15 16 17 18 20 23 24 25 25 25 25 29 \n', ' CLD  BK BK OV OV CL CL CL CL CL CL CL CL CL CL FW SC FW CL CL CL FW \n', ' WDR  34 27 25 23 22 22 23 24 25 27 27 26 24 21 24 23 21 22 24 24 27 \n', ' WSP  04 03 05 06 08 10 12 14 09 08 06 05 03 07 08 09 06 07 06 05 08 \n', ' P06         0     0     2     0     1     0     0     0     2  1  2 \n', ' P12               3           2           1           0        2    \n', ' Q06         0     0     0     0     0     0     0     0     0  0  0 \n', ' Q12               0           0           0           0        0    \n', ' T06      0/ 0  0/ 0  0/ 0  0/ 0  0/ 0  0/ 0  0/ 0  0/ 0  0/ 0  0/ 0 \n', ' T12                  0/ 4        1/ 1        0/ 3        0/ 0  0/ 4 \n', ' POZ   1  0  0  0  0  1  1  0  0  2  3  2  3  7  7  5  6 10  8  8  2 \n', ' POS  97100100100100 99 99100100 98 97 98 95 88 70 51 50 53 54 47 49 \n', ' TYP   S  S  S  S  S  S  S  S  S  S  S  S  S  S  S  S  S  S  S  S  S \n', ' SNW                                       0                    0    \n', ' CIG   8  8  7  7  8  8  8  8  8  8  8  8  8  8  8  8  8  8  8  8  8 \n', ' VIS   7  7  7  7  7  7  7  7  7  7  7  7  7  7  7  7  7  7  7  7  7 \n', ' OBV   N  N  N  N  N  N  N  N  N  N  N  N  N  N  N  N  N  N  N  N  N \n']
     result = mp.parse_station(station)
     result.to_csv("dsm_test.csv")
-    data_folder = Path("mosparse", "tests")
-    file_to_open = data_folder/ "kdsm_x.csv"
+    #file_to_open = Path("data", "kdsm_x.csv")
     t = open("dsm_test.csv", "r")
     e = open(file_to_open,'r')
     truth = t.readlines()
@@ -108,7 +111,7 @@ def test_parse_station():
         assert truth[i]==expected[i]
     
 
-#@pytest.mark.skip()
+@pytest.mark.skip()
 def test_get_rows():
     header = None
     station = [' KSTS   GFS MOS GUIDANCE    1/01/2019  1800 UTC                      \n',
@@ -132,5 +135,5 @@ def test_get_rows():
  ' CIG   8  8  8  8  2  1  8  8  8  8  8  1  1  1  2  8  8  8  8  1  1 \n',
  ' VIS   7  7  7  7  7  1  1  6  7  7  3  2  2  1  1  6  7  5  3  1  1 \n',
  ' OBV   N  N  N  N  N FG FG HZ  N HZ BR BR FG FG FG HZ  N BR BR FG FG \n']
-    return mp.get_rows(header, station)
+    assert mp.get_rows(header, station)
 
