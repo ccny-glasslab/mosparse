@@ -26,7 +26,9 @@ Features
 
 Install
 -------
-.. code-block: bash
+
+.. code:: bash
+
  git clone https://github.com/ccny-glasslab/mosparse.git
  cd mosparse
  pip install -ve . 
