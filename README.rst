@@ -23,4 +23,10 @@ Data
 Features
 --------
 
-* 
+Install
+-------
+```
+git clone https://github.com/ccny-glasslab/mosparse.git
+cd mosparse
+pip install -ve . 
+```
