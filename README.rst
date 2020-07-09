@@ -18,6 +18,7 @@ Model Output Statistics are the future predictions of models at various location
 Data
 -----
 * GFS MOS: https://sats.nws.noaa.gov/~mos/archives/mav.html
+* GFS MOS MAV Alphanumeric Message: https://www.nws.noaa.gov/mdl/synop/mavcard.php
 * GHCN: ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/by_year/
 
 Features
@@ -25,8 +26,7 @@ Features
 
 Install
 -------
-```
-git clone https://github.com/ccny-glasslab/mosparse.git
-cd mosparse
-pip install -ve . 
-```
+.. code-block: bash
+ git clone https://github.com/ccny-glasslab/mosparse.git
+ cd mosparse
+ pip install -ve . 
