@@ -8,8 +8,7 @@ import traceback
 import pandas as pd
 import numpy as np
 
-empty= re.compile(b'\s+\n')
-newline = re.compile(b'1\n')
+
 
 integer = ['N/X', 'X/N', 'TMP', 'DPT', 'WDR', 'WSP', 'CIG', 'VIS', 'P06', 'P12', 'POS', 'POZ','SNW']
 categorical = ['CLD','OBV', 'TYP', 'Q06', 'Q12', 'T06', 'T12']
@@ -184,11 +183,11 @@ Incorporates get_header, get_fntime, and get_rows.
     if not station:
         return pd.DataFrame()
     header = get_header(station[0])
-    header['ftime'] = get_fntime(station[1], station[2], header) #also header['fhour']
+    header['ftime'] = get_fntime(station[1], station[2], header) 
     df = get_rows(header, station)
     return df
 
-def write_station(station, saveout="../../mosout/modelrun", logs="../../mosout/log"):
+def write_station(station, saveout="mos/modelrun",logs="mos/log"):
     '''
     Seperates the stations with errors and the stations without errors into folders log and modelruns, respectively.
     
@@ -211,56 +210,28 @@ def write_station(station, saveout="../../mosout/modelrun", logs="../../mosout/l
     if not station:
         return
 
-    if not Path(saveout).exists():
-        os.mkdir(saveout)
-    
-    if not Path(logs).exists():
-        os.mkdir(logs)
-
+    Path(saveout).mkdir(parents=True, exist_ok=True)
+    Path(logs).mkdir(parents=True, exist_ok=True)
+   
     try:
+        df = parse_station(station)
+        short_model = df['short_model'].unique()[0]   
+        runtime = df['runtime'].unique()[0]
+    except Exception as e:
         header = get_header(station[0])
-        runtime = str(header['runtime'])
-        #name = f"{header['short_model']}_{header['station']}_{header['runtime'].strftime('%Y_%m_%d_%H')}"
-        name = f"{header['short_model']}_{header['runtime'].strftime('%Y_%m_%d_%H')}"
-        filename = f"{name}.csv.gz"
-        filepath = Path(saveout,filename)    
-        header['ftime']= get_fntime(station[1], station[2], header)
-        df = get_rows(header, station)
-        
+        short_model = header['short_model']
+        runtime = header['runtime']
+        filename = f"{short_model}_{runtime:%Y_%m_%d_%H}"
+        filepath = Path(logs,f'{filename}.log')
+        with open(filepath, 'w') as f:
+            print(station, file=f)
+            traceback.print_exc(file=f)    
+    else:
+        filename = f"{short_model}_{runtime:%Y_%m_%d_%H}.csv"
+        filepath = Path(saveout, filename) 
         if not filepath.exists():
             df.to_csv(filepath, index=False, mode="a")
         else:
             df.to_csv(filepath, index=False, mode="a", header=False)
-    except Exception as e:
-        with open(Path(logs,f'{filename}.log'), 'w') as f:
-            print(station, file=f)
-            traceback.print_exc(file=f)
-            
-    return
 
-    
-def get_main_stations(f):
-    '''
-    Creates a format with the stations to make it more easily readable.
-    
-    Parameters
-    -----------
-    f : open file object
-        The object being used to open the file.
-    
-    Returns
-    --------
-    station : list of strings
-        The data collected by the model.
-    '''
-    station = []
-    stations = []
-    for i, line in enumerate(f):
-            if empty.match(line):
-                stations.append(station)
-                station = []
-            elif newline.match(line):
-                pass
-            else:
-                station.append(line.decode())
-    return stations
+    return filepath
