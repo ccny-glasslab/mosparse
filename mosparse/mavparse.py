@@ -20,7 +20,8 @@ all_df = pd.DataFrame(columns=all_cols[1:])
 
 def get_header(header_row):
     """ 
-    Creates a dictionary containing the station, model, and run time based on the first row of the MOS data. The row should only come from MOS data.
+    Creates a dictionary containing the station, model, and run time based on the first row of the MOS data. 
+    The row should only come from MOS data.
 
     Parameters
     -----------

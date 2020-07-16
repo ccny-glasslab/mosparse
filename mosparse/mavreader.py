@@ -45,7 +45,7 @@ class MavReader:
             
     def get_stations(self):
         station = []
-        for i, line in enumerate(self.stream):
+        for line in self.stream:
             if MavReader.empty.match(line):
                 yield station
                 station = []
