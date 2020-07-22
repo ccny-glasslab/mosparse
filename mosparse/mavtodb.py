@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 
-LOG_FILENAME = Path('mos/logmos2db.out')
+LOG_FILENAME = Path('moslog.out')
 (LOG_FILENAME.parent).mkdir(parents=True, exist_ok=True)
 logger = logging.getLogger("database")
 logger.setLevel(logging.INFO)
