@@ -13,7 +13,7 @@ class MavReader:
     newline = re.compile(b'1\n')
     
     def __init__(self, filepath, stations=False):
-        """Open a avnmav file and returns text or a list of stations
+        """Open a avnmav file and returns text or a generator of stations
         filepath: str or Path
             location of avnmav file
         stations: bool, default=False
@@ -50,7 +50,7 @@ class MavReader:
                 yield station
                 station = []
             elif MavReader.newline.match(line):
-                pass
+                continue
             else:
                 station.append(line.decode())
             

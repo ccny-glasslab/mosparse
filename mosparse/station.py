@@ -234,5 +234,5 @@ def write_station(station, saveout="mos/modelrun",logs="mos/log"):
             df.to_csv(filepath, index=False, mode="a")
         else:
             df.to_csv(filepath, index=False, mode="a", header=False)
-            
+
     return filepath
