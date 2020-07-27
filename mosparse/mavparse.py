@@ -188,7 +188,7 @@ Incorporates get_header, get_fntime, and get_rows.
     df = get_rows(header, station)
     return df
 
-def write_station(station, saveout="mos/modelrun",logs="mos/log"):
+def write_station(station, filename = None, saveout="mos/modelrun",logs="mos/log"):
     '''
     Seperates the stations with errors and the stations without errors into folders log and modelruns, respectively.
     
@@ -213,7 +213,7 @@ def write_station(station, saveout="mos/modelrun",logs="mos/log"):
 
     Path(saveout).mkdir(parents=True, exist_ok=True)
     Path(logs).mkdir(parents=True, exist_ok=True)
-   
+
     try:
         df = parse_station(station)
         short_model = df['short_model'].unique()[0]   
@@ -228,11 +228,12 @@ def write_station(station, saveout="mos/modelrun",logs="mos/log"):
             print(station, file=f)
             traceback.print_exc(file=f)    
     else:
-        filename = f"{short_model}_{runtime:%Y_%m_%d_%H}.csv"
+        if filename is None:
+            filename = f"{short_model}_{runtime:%Y_%m_%d_%H}"
         filepath = Path(saveout, filename) 
         if not filepath.exists():
-            df.to_csv(filepath, index=False, mode="a")
+            df.to_csv(f'{filepath}.csv', index=False)
         else:
-            df.to_csv(filepath, index=False, mode="a", header=False)
+            df.to_csv(f'{filepath}.csv', index=False, mode="a", header=False)
             
     return filepath
