@@ -9,94 +9,87 @@ import pandas as pd
 import numpy as np
 
 
-
-integer = ['N/X', 'X/N', 'TMP', 'DPT', 'WDR', 'WSP', 'CIG', 'VIS', 'P06', 'P12', 'POS', 'POZ','SNW']
-categorical = ['CLD','OBV', 'TYP', 'Q06', 'Q12', 'T06', 'T12']
-all_cols = integer + categorical
-# pop N/X
-all_df = pd.DataFrame(columns=all_cols[1:]) 
-#incremental = ['N/X', 'X/N', 'P06', 'P12', 'Q06', 'Q12','T06', 'T12','SNW']
-#incremental2 = ['T06' , 'T12']
-
-def get_header(header_row):
-    """ 
-    Creates a dictionary containing the station, model, and run time based on the first row of the MOS data. 
-    The row should only come from MOS data.
-
-    Parameters
-    -----------
-    header_row : string
-        Row with name, model, and runtime of a station.
-
-    Returns
-    --------
-    header : dictionary
-        Values of the name, model, and runtime of a station.
-    """
-    header = {}
-    header['station'], c1, c2, c3, date, time, tz =  header_row.split()
-    header['short_model'] = c1
-    header['model'] = f'{c1} {c2} {c3}' 
-    header['runtime'] = dateutil.parser.parse(f'{date} {time} {tz}')
-    return header
-
-def get_fntime(date_row, hour_row, header):
-    """ 
-    Creates a list of dateutil dates based on a header and the date and hour rows of the MOS data.
-        
-    Parameters
-    -----------
-    date_row : string
-        The dates the model is predicting 
-    hour_row : string
-        The hours the model is prediction
-    header : dictionary
-        Values of the name, model, and runtime of a station.
-
-    Returns
-    --------
-    finish_times : list
-        List of the time in hour the model stopped running.
-    forecast_times : list
-        List of the amount of hours the model is predicting in advance.
-        
-    """
-    #(DT, Hr tuples), which is the finish time column
-    #http://www.meteor.wisc.edu/~hopkins/aos100/mos-doc.htm
-    #https://mesonet.agron.iastate.edu/mos/fe.phtml
-    dates = [m.strip() for m in date_row.split("/")[1:]]
-    hours = [dt.strip() for dt in hour_row.split()][1:]
+class Station:
+    integer = ['N/X', 'X/N', 'TMP', 'DPT', 'WDR', 'WSP', 'CIG', 'VIS', 'P06', 'P12', 'POS', 'POZ','SNW']
+    categorical = ['CLD','OBV', 'TYP', 'Q06', 'Q12', 'T06', 'T12']
+    all_cols = integer + categorical
+    # pop N/X
     
-    year = header['runtime'].year
-    
-    finish_times = []
-    dt = 0
-    first_stopped = 0
-    for hour in hours:
-        if first_stopped == 0:
-            first_stopped = 1
-        elif hour == '00':
-            dt+=1
-        try:
-            currdate = dateutil.parser.parse(dates[dt])
-            month, day = currdate.month, currdate.day
-            if month == 1 and day == 1 and hour == '00':
-                year += 1
-        except:
-            #if dt > 0:
-            currdate = dateutil.parser.parse(str(year) + ' ' + dates[dt-1]) + datetime.timedelta(days=1)
-            year, month, day = currdate.year, currdate.month, currdate.day
-            #else:
-            #    prevmonth, prevday = dates[dt+1].split()
-             #   currdate = datetime.datetime(int(year), int(prevmonth), int(prevday)) - datetime.timedelta(days=1)
-              #  month, day = currdate.month, currdate.day
+   
+    #incremental = ['N/X', 'X/N', 'P06', 'P12', 'Q06', 'Q12','T06', 'T12','SNW']
+    #incremental2 = ['T06' , 'T12']
+    def __init__(self, station):
+        if len(station) < 1:
+            raise ValueError("station must not be empty")
+        self.header = station[0]
+        self.set_forecast_times(station[1:3])
+        self.df = pd.DataFrame(columns=all_cols[1:]) 
             
-        # half the values are strings, so create full string to parse
-        # otherwise would have to cast to string or int
-        fntime = f'{year} {month} {day} {hour}'
-        finish_times.append(dateutil.parser.parse(fntime))
-        #forecast_times.append(int((((finish_times[-1])-(header['runtime'].replace(tzinfo=None))).total_seconds())/3600))
-    return finish_times #also finish_times
+    @property
+    def header(self):
+        return self._header
+    
+    @header.setter  
+    def header(self, header_row):
+        """ 
+        Creates a dictionary containing the station, model, and 
+        run time based on the first row of the MOS data. 
+        The row should only come from MOS data.
+
+        Returns
+        --------
+        header : dictionary
+            Values of the name, model, and runtime of a station.
+        """
+        self._header = {}
+        self._header['station'], c1, c2, c3, date, time, tz = header_row.split()
+        self._header['short_model'] = c1
+        self._header['model'] = f'{c1} {c2} {c3}' 
+        self._header['runtime'] = dateutil.parser.parse(f'{date} {time} {tz}')
+
+    def set_forecast_times(self, dt_rows):
+        """ 
+        Creates a list of forecast times based on a header and the date and hour rows of the MOS data.
+
+        Parameters
+        -----------
+        dt_rows : list of string
+            row1: The dates the model is predicting 
+            row2: The hours the model is prediction
+        """
+        #(DT, Hr tuples), which is the finish time column
+        #http://www.meteor.wisc.edu/~hopkins/aos100/mos-doc.htm
+        #https://mesonet.agron.iastate.edu/mos/fe.phtml
+        
+        
+        dates = [m.strip() for m in dt_rows[0].split("/")[1:]]
+        hours = [dt.strip() for dt in dt_rows[1].split()][1:]
+
+        year = self.header['runtime'].year
+
+        self._forecast_times = []
+        dt = 0
+        first_stopped = 0
+        for hour in hours:
+            if first_stopped == 0:
+                first_stopped = 1
+            elif hour == '00':
+                dt+=1
+            try:
+                currdate = dateutil.parser.parse(dates[dt])
+                month, day = currdate.month, currdate.day
+                if month == 1 and day == 1 and hour == '00':
+                    year += 1
+            except:
+                #if dt > 0:
+                currdate = dateutil.parser.parse(str(year) + ' ' + dates[dt-1]) + datetime.timedelta(days=1)
+                year, month, day = currdate.year, currdate.month, currdate.day
+    
+            # half the values are strings, so create full string to parse
+            # otherwise would have to cast to string or int
+            fntime = f'{year} {month} {day} {hour}'
+            self._forecast_times.append(dateutil.parser.parse(fntime))
+    
 
 def parse_row(row):
     """

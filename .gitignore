@@ -8,4 +8,6 @@
 *.pyc
 *.egg-info
 __pycache__/
-
+*.out
+*.egg-info
+*.sqlite
