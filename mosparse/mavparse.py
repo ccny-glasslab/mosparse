@@ -8,6 +8,15 @@ import traceback
 import pandas as pd
 import numpy as np
 
+import logging
+
+LOG_FILENAME = Path('moswrite.out')
+(LOG_FILENAME.parent).mkdir(parents=True, exist_ok=True)
+logger = logging.getLogger("database")
+logger.setLevel(logging.INFO)
+handler = logging.FileHandler(filename=LOG_FILENAME)
+logger.addHandler(handler)
+
 
 
 integer = ['N/X', 'X/N', 'TMP', 'DPT', 'WDR', 'WSP', 'CIG', 'VIS', 'P06', 'P12', 'POS', 'POZ','SNW']
@@ -216,24 +225,19 @@ def write_station(station, filename = None, saveout="mos/modelrun",logs="mos/log
 
     try:
         df = parse_station(station)
+        station = df['station'].unique()[0]
         short_model = df['short_model'].unique()[0]   
         runtime = df['runtime'].unique()[0]
     except Exception as e:
         header = get_header(station[0])
         short_model = header['short_model']
         runtime = header['runtime']
-        filename = f"{short_model}_{runtime:%Y_%m_%d_%H}"
-        filepath = Path(logs,f'{filename}.log')
-        with open(filepath, 'w') as f:
-            print(station, file=f)
-            traceback.print_exc(file=f)    
+        logger.exception("{station}: {runtime:%Y/%m/%d:%H}".format(**header))
     else:
         if filename is None:
             filename = f"{short_model}_{runtime:%Y_%m_%d_%H}"
         filepath = Path(saveout, filename) 
-        if not filepath.exists():
-            df.to_csv(f'{filepath}.csv', index=False)
-        else:
-            df.to_csv(f'{filepath}.csv', index=False, mode="a", header=False)
+        df.to_csv(f'{filepath}.csv', index=False, mode="a", header=False)
+        logger.info(f"{station}: {runtime:%Y/%m/%d:%H}")
             
     return filepath
