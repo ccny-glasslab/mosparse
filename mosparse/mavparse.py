@@ -10,7 +10,7 @@ import numpy as np
 
 import logging
 
-LOG_FILENAME = Path('moswrite.out')
+LOG_FILENAME = Path('moslog.out')
 (LOG_FILENAME.parent).mkdir(parents=True, exist_ok=True)
 logger = logging.getLogger("database")
 logger.setLevel(logging.INFO)
@@ -197,7 +197,7 @@ Incorporates get_header, get_fntime, and get_rows.
     df = get_rows(header, station)
     return df
 
-def write_station(station, filename = None, saveout="mos/modelrun",logs="mos/log"):
+def write_station(station, filename = None, columns= None, saveout="mos/modelrun",logs="mos/log"):
     '''
     Seperates the stations with errors and the stations without errors into folders log and modelruns, respectively.
     
@@ -234,10 +234,10 @@ def write_station(station, filename = None, saveout="mos/modelrun",logs="mos/log
         runtime = header['runtime']
         logger.exception("{station}: {runtime:%Y/%m/%d:%H}".format(**header))
     else:
-        if filename is None:
-            filename = f"{short_model}_{runtime:%Y_%m_%d_%H}"
+        filename = f"{short_model}_{runtime:%Y_%m_%d_%H}.csv" if filename is None else filename
         filepath = Path(saveout, filename) 
-        df.to_csv(f'{filepath}.csv', index=False, mode="a", header=False)
+        mode = 'a' if filepath.exists() else 'w'
+        columns = df.columns if columns is None else columns
+        df[columns].to_csv(filepath, index=False, mode=mode, header=False)
         logger.info(f"{station}: {runtime:%Y/%m/%d:%H}")
-            
     return filepath
