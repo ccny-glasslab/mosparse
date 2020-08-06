@@ -197,7 +197,7 @@ Incorporates get_header, get_fntime, and get_rows.
     df = get_rows(header, station)
     return df
 
-def write_station(station, filename = None, columns= None, saveout="mos/modelrun",logs="mos/log"):
+def write_station(station, filename = None, stations = None, columns= None, saveout="mos/modelrun",logs="mos/log"):
     '''
     Seperates the stations with errors and the stations without errors into folders log and modelruns, respectively.
     
@@ -219,10 +219,14 @@ def write_station(station, filename = None, columns= None, saveout="mos/modelrun
     '''
     if not station:
         return
-
+    
+    # hack to check the station code, skip parsing if not in list
+    if (stations is not None) and (stations[0][:5].strip() not in stations):
+        return
+        
     Path(saveout).mkdir(parents=True, exist_ok=True)
     Path(logs).mkdir(parents=True, exist_ok=True)
-
+    
     try:
         df = parse_station(station)
         station = df['station'].unique()[0]
