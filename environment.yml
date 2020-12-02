@@ -1,0 +1,18 @@
+name: mparse
+dependencies:
+ - python=3.8
+ - numpy
+ - scipy
+ - matplotlib
+ - cartopy
+ - netCDF4
+ - xarray
+ - pandas
+ - geopandas
+ - scikit-image
+ - scikit-learn
+ - boto3
+ - sqlalchemy
+ - dask
+ - s3fs
+ - tqdm
