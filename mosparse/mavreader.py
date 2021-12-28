@@ -4,7 +4,7 @@ from pathlib import Path
 import re
 import zlib
 
-from unlzw import unlzw
+from ncompress import decompress as unlzw
 
 class MavReader:
     ''' Opens AVNMAV file and returns stream of data
